@@ -1,0 +1,224 @@
+{
+  "generated_at_utc": "2026-06-16T08:36:18.415257+00:00",
+  "raw_dir": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw",
+  "processed_dir": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\processed",
+  "report": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\reports\\data_audit_report.md",
+  "fetches": [
+    {
+      "name": "thestatsapi_fixtures",
+      "url": "https://www.thestatsapi.com/world-cup/data/fixtures.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\thestatsapi_fixtures.json",
+      "note": "41729 bytes"
+    },
+    {
+      "name": "worldcup26_games",
+      "url": "https://worldcup26.ir/get/games",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\worldcup26_games.json",
+      "note": "47668 bytes"
+    },
+    {
+      "name": "worldcup26_groups",
+      "url": "https://worldcup26.ir/get/groups",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\worldcup26_groups.json",
+      "note": "7007 bytes"
+    },
+    {
+      "name": "worldcup26_teams",
+      "url": "https://worldcup26.ir/get/teams",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\worldcup26_teams.json",
+      "note": "8434 bytes"
+    },
+    {
+      "name": "worldcup26_stadiums",
+      "url": "https://worldcup26.ir/get/stadiums",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\worldcup26_stadiums.json",
+      "note": "4834 bytes"
+    },
+    {
+      "name": "international_results",
+      "url": "https://raw.githubusercontent.com/martj42/international_results/master/results.csv",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\international_results.csv",
+      "note": "3724375 bytes"
+    },
+    {
+      "name": "international_goalscorers",
+      "url": "https://raw.githubusercontent.com/martj42/international_results/master/goalscorers.csv",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\international_goalscorers.csv",
+      "note": "3256517 bytes"
+    },
+    {
+      "name": "international_shootouts",
+      "url": "https://raw.githubusercontent.com/martj42/international_results/master/shootouts.csv",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\international_shootouts.csv",
+      "note": "28809 bytes"
+    },
+    {
+      "name": "statsbomb_competitions",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/competitions.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_competitions.json",
+      "note": "34887 bytes"
+    },
+    {
+      "name": "statsbomb_wc2022_matches",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/matches/43/106.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_wc2022_matches.json",
+      "note": "119132 bytes"
+    },
+    {
+      "name": "fifa_ranking_men_page",
+      "url": "https://inside.fifa.com/fifa-world-ranking/men",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\fifa_ranking_men_page.html",
+      "note": "216653 bytes"
+    },
+    {
+      "name": "thestatsapi_lineups_page",
+      "url": "https://www.thestatsapi.com/world-cup/lineups",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\thestatsapi_lineups_page.html",
+      "note": "133711 bytes"
+    },
+    {
+      "name": "thestatsapi_odds_page",
+      "url": "https://www.thestatsapi.com/world-cup/odds",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\thestatsapi_odds_page.html",
+      "note": "116888 bytes"
+    },
+    {
+      "name": "open_meteo_weather_sample",
+      "url": "https://api.open-meteo.com/v1/forecast",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\processed\\weather_hourly_sample.csv",
+      "note": "144 hourly rows"
+    },
+    {
+      "name": "statsbomb_events_3857276",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857276.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857276.json",
+      "note": "2811450 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857271",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857271.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857271.json",
+      "note": "3063347 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857296",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857296.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857296.json",
+      "note": "3493039 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857274",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857274.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857274.json",
+      "note": "3054360 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857255",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857255.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857255.json",
+      "note": "3753326 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857272",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857272.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857272.json",
+      "note": "2962761 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857278",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857278.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857278.json",
+      "note": "3036508 bytes"
+    },
+    {
+      "name": "statsbomb_events_3857277",
+      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/events/3857277.json",
+      "ok": true,
+      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_events_3857277.json",
+      "note": "3090039 bytes"
+    }
+  ],
+  "tables": {
+    "fixtures_2026.csv": {
+      "rows": 104,
+      "use": "2026 full schedule base table"
+    },
+    "worldcup26_games.csv": {
+      "rows": 104,
+      "use": "live or current match scores from non-official source"
+    },
+    "worldcup26_group_table.csv": {
+      "rows": 48,
+      "use": "current group standings from non-official source"
+    },
+    "teams_2026.csv": {
+      "rows": 48,
+      "use": "team names and FIFA codes"
+    },
+    "stadiums_2026.csv": {
+      "rows": 16,
+      "use": "venue metadata and manually mapped coordinates"
+    },
+    "weather_hourly_sample.csv": {
+      "rows": 144,
+      "use": "hourly weather feature sample from Open-Meteo"
+    },
+    "international_results_worldcup_only.csv": {
+      "rows": 1036,
+      "use": "World Cup historical scoreline training and backtesting"
+    },
+    "derived_elo_snapshot.csv": {
+      "rows": 336,
+      "use": "self-computed national-team Elo from international results"
+    },
+    "derived_recent_form.csv": {
+      "rows": 336,
+      "use": "recent form, goals for, goals against features"
+    },
+    "international_goalscorers.csv": {
+      "rows": 47098,
+      "use": "goal minute and penalty flags where available"
+    },
+    "international_shootouts.csv": {
+      "rows": 678,
+      "use": "penalty shootout winner modeling"
+    },
+    "statsbomb_worldcup_seasons.csv": {
+      "rows": 11,
+      "use": "which World Cup seasons are available in StatsBomb open data"
+    },
+    "statsbomb_wc2022_matches.csv": {
+      "rows": 64,
+      "use": "StatsBomb match IDs for event download"
+    },
+    "statsbomb_event_match_summary.csv": {
+      "rows": 8,
+      "use": "event-level match coverage sample"
+    },
+    "statsbomb_event_half_team_summary.csv": {
+      "rows": 32,
+      "use": "team-half event counts for goals, cards, corners, free kicks, penalties"
+    }
+  }
+}

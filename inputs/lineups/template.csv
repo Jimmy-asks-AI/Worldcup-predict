@@ -1,0 +1,5 @@
+match_id,team,player,role,position,rating,rating_basis,status,expected_minutes,sub_minute,official,source,notes
+1,Example Team,Example Goalkeeper,starter,GK,82,prematch,available,90,,true,manual-template,
+1,Example Team,Example Forward,starter,ST,86,prematch,available,90,,true,manual-template,
+1,Example Team,Example Impact Sub,substitute,LW,80,prematch,available,,60,false,manual-template,planned second-half substitute
+1,Example Team,Example Injured Defender,unavailable,CB,84,prematch,injured,90,,true,manual-template,lost starter quality

@@ -1,0 +1,32 @@
+{
+  "team_travel_fatigue_rows": 144,
+  "tactics_rows": 48,
+  "referee_prior_rows": 1,
+  "weather_rows": 35,
+  "player_performance_rows": 248,
+  "fifa_ranking_rows": 211,
+  "fifa_ranking_2026_team_rows": 48,
+  "event_half_team_rows": 32,
+  "outputs": {
+    "fifa_ranking_snapshot": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\worldcup_data_audit\\data\\processed\\fifa_ranking_snapshot.csv",
+    "fifa_ranking_raw": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\worldcup_data_audit\\data\\raw\\fifa_rankings_men_latest.json",
+    "event_half_team_summary": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\worldcup_data_audit\\data\\processed\\statsbomb_event_half_team_summary.csv",
+    "team_travel_fatigue": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\inputs\\match_context\\team_travel_fatigue.csv",
+    "tactics": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\inputs\\match_context\\tactics.csv",
+    "referees": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\inputs\\match_context\\referees.csv",
+    "weather": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\inputs\\match_context\\weather_forecast.csv",
+    "player_performance": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\inputs\\player_performance\\player_match_performance.csv"
+  },
+  "method": "non-odds context from FIFA ranking API plus existing processed fixtures, stadiums, Elo/recent form, Open-Meteo sample, and StatsBomb open-data samples",
+  "limitations": [
+    "FIFA ranking is a national-team strength prior and can overlap with Elo; model weight is intentionally small.",
+    "First match has neutral travel because team base camps are not available.",
+    "Knockout travel cannot be known until simulated teams are resolved.",
+    "Timezone shift is approximated from longitude.",
+    "Tactics are heuristic priors from recent form and Elo, not confirmed coaching plans.",
+    "Referee row is a global event-environment prior, not assigned referee history.",
+    "Event-count predictions use partial StatsBomb half-team event samples and should be recalibrated with a larger feed.",
+    "Weather rows reuse available stadium samples and must be refreshed close to kickoff for real forecasts.",
+    "Player performance rows are partial StatsBomb open-data samples, not full club and national-team coverage."
+  ]
+}

@@ -1,0 +1,4 @@
+﻿interface:
+  display_name: "World Cup Predict"
+  short_description: "World Cup multi-agent predictor"
+  default_prompt: "Use $worldcup-predict to run a local World Cup match or tournament prediction and explain the result in Chinese."

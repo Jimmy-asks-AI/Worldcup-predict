@@ -1,0 +1,3 @@
+source,url,local_path,rows,license_status,use_in_model,notes
+ea_fc_official_ratings_page,https://www.ea.com/en/games/ea-sports-fc/ratings,E:\Vibe-coding\小红书\worldcup_data_audit\data\raw\ea_fc_ratings_page.html,,official web page; not a downloadable complete table,source validation only,"Confirms public FC 26 ratings page and 17,000+ player claim."
+eafc26_github_kaggle_mirror,https://raw.githubusercontent.com/ismailoksuz/EAFC26-DataHub/main/data/players.csv,E:\Vibe-coding\小红书\worldcup_data_audit\data\raw\eafc26_players.csv,18405,unverified; mirror has no LICENSE file,optional lineup rating fallback only,"README says source is Kaggle FC 26 player data. Treat as static game-rating prior, not live performance."

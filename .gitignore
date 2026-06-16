@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local data and generated prediction tables are intentionally excluded.
+worldcup_data_audit/data/
+outputs/predictions/
+inputs/player_ratings/eafc26_player_ratings.csv
+inputs/player_performance/player_match_performance.csv
+inputs/player_performance/player_identity_map.csv
+inputs/match_context/weather_forecast.csv
+inputs/match_context/team_travel_fatigue.csv
+inputs/match_context/tactics.csv
+inputs/match_context/referees.csv
+
+# Local scratch/export directories.
+.venv/
+venv/
+tmp/
+temp/
