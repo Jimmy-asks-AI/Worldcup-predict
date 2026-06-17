@@ -7,11 +7,13 @@ from typing import TYPE_CHECKING
 from .aliases import normalize_team
 from .events import EventAgent
 from .models import MatchPrediction, TeamStrength
+from .score_models import aggregate_wdl, poisson_pmf, sample_scoreline, scoreline_matrix, sorted_scorelines, validate_score_model
 from .strength import StrengthAgent
 
 if TYPE_CHECKING:
     from .context import MatchContextAgent
     from .lineups import LineupAgent
+    from .uncertainty import UncertaintyAgent
 
 
 class ScorelineAgent:
@@ -22,71 +24,50 @@ class ScorelineAgent:
         lineup: "LineupAgent | None" = None,
         context: "MatchContextAgent | None" = None,
         events: EventAgent | None = None,
+        score_model: str = "independent_poisson",
+        dixon_coles_rho: float = -0.08,
+        uncertainty: "UncertaintyAgent | None" = None,
     ):
         self.strength = strength
         self.max_goals = max_goals
         self.lineup = lineup
         self.context = context
         self.events = events
+        self.score_model = validate_score_model(score_model)
+        self.dixon_coles_rho = dixon_coles_rho
+        self.uncertainty = uncertainty
 
     @staticmethod
     def poisson_pmf(k: int, lam: float) -> float:
-        return math.exp(-lam) * (lam**k) / math.factorial(k)
+        return poisson_pmf(k, lam)
 
     def predict(self, home: str, away: str, match_id: str = "") -> MatchPrediction:
         home = normalize_team(home)
         away = normalize_team(away)
-        home_strength = self.strength.team_strength(home)
-        away_strength = self.strength.team_strength(away)
-        lam_h, lam_a, warnings = self.strength.expected_lambdas(home, away)
-        base_lam_h, base_lam_a = lam_h, lam_a
-        lineup_payload = {}
-        context_payload = {}
-        if self.lineup:
-            adjustment = self.lineup.match_adjustment(home, away, match_id)
-            lam_h = round(max(0.15, min(4.5, lam_h * adjustment.lambda_home_multiplier)), 4)
-            lam_a = round(max(0.15, min(4.5, lam_a * adjustment.lambda_away_multiplier)), 4)
-            warnings.extend(adjustment.warnings)
-            lineup_payload = asdict(adjustment)
-        if self.context:
-            adjustment = self.context.match_adjustment(home, away, match_id)
-            lam_h = round(max(0.15, min(4.5, lam_h * adjustment.lambda_home_multiplier)), 4)
-            lam_a = round(max(0.15, min(4.5, lam_a * adjustment.lambda_away_multiplier)), 4)
-            warnings.extend(adjustment.warnings)
-            context_payload = adjustment.as_payload()
-        matrix = []
-        total = 0.0
-        for h_goals in range(self.max_goals + 1):
-            row = []
-            for a_goals in range(self.max_goals + 1):
-                p = self.poisson_pmf(h_goals, lam_h) * self.poisson_pmf(a_goals, lam_a)
-                row.append(p)
-                total += p
-            matrix.append(row)
-        matrix = [[p / total for p in row] for row in matrix]
-
-        p_home = p_draw = p_away = 0.0
-        scorelines = []
-        for h_goals, row in enumerate(matrix):
-            for a_goals, p in enumerate(row):
-                if h_goals > a_goals:
-                    p_home += p
-                elif h_goals == a_goals:
-                    p_draw += p
-                else:
-                    p_away += p
-                scorelines.append(
-                    {
-                        "scoreline": f"{h_goals}-{a_goals}",
-                        "home_goals": h_goals,
-                        "away_goals": a_goals,
-                        "probability": round(p, 6),
-                    }
-                )
-        scorelines.sort(key=lambda item: item["probability"], reverse=True)
+        (
+            home_strength,
+            away_strength,
+            base_lam_h,
+            base_lam_a,
+            lam_h,
+            lam_a,
+            lineup_payload,
+            context_payload,
+            warnings,
+        ) = self._prediction_inputs(home, away, match_id)
+        matrix = scoreline_matrix(
+            lam_h,
+            lam_a,
+            max_goals=self.max_goals,
+            score_model=self.score_model,
+            dixon_coles_rho=self.dixon_coles_rho,
+        )
+        p_home, p_draw, p_away = aggregate_wdl(matrix)
+        scorelines = sorted_scorelines(matrix)
         event_payload = (
             self.events.predict(home, away, lam_h, lam_a, context_payload) if self.events else {}
         )
+        uncertainty_payload = self._uncertainty_payload(lam_h, lam_a)
         explanation = self._build_explanation(
             home=home,
             away=away,
@@ -104,6 +85,7 @@ class ScorelineAgent:
             lineup_payload=lineup_payload,
             context_payload=context_payload,
             event_payload=event_payload,
+            uncertainty_payload=uncertainty_payload,
             warnings=warnings,
         )
         return MatchPrediction(
@@ -122,11 +104,54 @@ class ScorelineAgent:
             context_adjustment=context_payload,
             event_prediction=event_payload,
             explanation=explanation,
+            score_model=self.score_model,
+            score_model_parameters=self._score_model_parameters(),
+            uncertainty=uncertainty_payload,
+        )
+
+    def _prediction_inputs(self, home: str, away: str, match_id: str):
+        home_strength = self.strength.team_strength(home)
+        away_strength = self.strength.team_strength(away)
+        lam_h, lam_a, warnings = self.strength.expected_lambdas(home, away)
+        base_lam_h, base_lam_a = lam_h, lam_a
+        lineup_payload = {}
+        context_payload = {}
+        if self.lineup:
+            adjustment = self.lineup.match_adjustment(home, away, match_id)
+            lam_h = round(max(0.15, min(4.5, lam_h * adjustment.lambda_home_multiplier)), 4)
+            lam_a = round(max(0.15, min(4.5, lam_a * adjustment.lambda_away_multiplier)), 4)
+            warnings.extend(adjustment.warnings)
+            lineup_payload = asdict(adjustment)
+        if self.context:
+            adjustment = self.context.match_adjustment(home, away, match_id)
+            lam_h = round(max(0.15, min(4.5, lam_h * adjustment.lambda_home_multiplier)), 4)
+            lam_a = round(max(0.15, min(4.5, lam_a * adjustment.lambda_away_multiplier)), 4)
+            warnings.extend(adjustment.warnings)
+            context_payload = adjustment.as_payload()
+        return (
+            home_strength,
+            away_strength,
+            base_lam_h,
+            base_lam_a,
+            lam_h,
+            lam_a,
+            lineup_payload,
+            context_payload,
+            warnings,
         )
 
     def sample_score(self, rng, home: str, away: str, match_id: str = "") -> tuple[int, int]:
-        pred = self.predict(home, away, match_id=match_id)
-        return self._poisson_sample(rng, pred.lambda_home), self._poisson_sample(rng, pred.lambda_away)
+        home = normalize_team(home)
+        away = normalize_team(away)
+        *_unused, lam_h, lam_a, _lineup_payload, _context_payload, _warnings = self._prediction_inputs(home, away, match_id)
+        matrix = scoreline_matrix(
+            lam_h,
+            lam_a,
+            max_goals=self.max_goals,
+            score_model=self.score_model,
+            dixon_coles_rho=self.dixon_coles_rho,
+        )
+        return sample_scoreline(rng, matrix)
 
     @staticmethod
     def _poisson_sample(rng, lam: float) -> int:
@@ -137,6 +162,26 @@ class ScorelineAgent:
             k += 1
             p *= rng.random()
         return k - 1
+
+    def _score_model_parameters(self) -> dict[str, float | int | str]:
+        payload: dict[str, float | int | str] = {
+            "score_model": self.score_model,
+            "max_goals": self.max_goals,
+        }
+        if self.score_model == "dixon_coles":
+            payload["dixon_coles_rho"] = self.dixon_coles_rho
+        return payload
+
+    def _uncertainty_payload(self, lam_h: float, lam_a: float) -> dict[str, object]:
+        if not self.uncertainty:
+            return {}
+        return self.uncertainty.estimate(
+            lam_h,
+            lam_a,
+            max_goals=self.max_goals,
+            score_model=self.score_model,
+            dixon_coles_rho=self.dixon_coles_rho,
+        )
 
     def _build_explanation(
         self,
@@ -156,6 +201,7 @@ class ScorelineAgent:
         lineup_payload: dict,
         context_payload: dict,
         event_payload: dict,
+        uncertainty_payload: dict,
         warnings: list[str],
     ) -> dict[str, object]:
         winner = home if p_home >= max(p_draw, p_away) else away if p_away >= p_draw else "平局"
@@ -169,6 +215,7 @@ class ScorelineAgent:
         lineup_section = self._lineup_section(lineup_payload)
         context_section = self._context_section(context_payload)
         event_section = self._event_section(event_payload)
+        uncertainty_section = self._uncertainty_section(uncertainty_payload)
         data_quality = self._data_quality_section(
             lineup_payload=lineup_payload,
             context_payload=context_payload,
@@ -179,12 +226,13 @@ class ScorelineAgent:
         return {
             "language": "zh-CN",
             "headline": headline,
+            "score_model": self._score_model_parameters(),
             "method": [
                 "先用世界杯历史赛果得到基础进球率。",
                 "再用 Elo、FIFA 排名、近期进失球、世界杯历史表现修正两队进球期望。",
                 "如果提供赛前阵容、伤停、替补计划和球员评分，再把这些转成攻防乘数。",
                 "如果启用上下文数据，再加入球员表现、旅行疲劳、战术、天气和裁判环境。",
-                "最后用 0-0 到 7-7 的 Poisson 比分矩阵汇总比分概率和胜平负概率。",
+                self._score_model_method_text(),
             ],
             "outcome": {
                 "home_team": home,
@@ -216,6 +264,7 @@ class ScorelineAgent:
                 "lineup_and_availability": lineup_section,
                 "match_context": context_section,
                 "event_counts": event_section,
+                "uncertainty": uncertainty_section,
                 "data_quality": data_quality,
             },
             "warnings": [self._zh_warning(warning) for warning in warnings],
@@ -263,6 +312,14 @@ class ScorelineAgent:
                 "warnings": list(away.warnings),
             },
         }
+
+    def _score_model_method_text(self) -> str:
+        if self.score_model == "dixon_coles":
+            return (
+                "最后用 0-0 到 7-7 的 Dixon-Coles 修正 Poisson 比分矩阵汇总比分概率和胜平负概率，"
+                "其中低比分平局会按 rho 参数做相关性修正。"
+            )
+        return "最后用 0-0 到 7-7 的独立 Poisson 比分矩阵汇总比分概率和胜平负概率。"
 
     @staticmethod
     def _lineup_section(lineup_payload: dict) -> dict[str, object]:
@@ -343,6 +400,26 @@ class ScorelineAgent:
             "context": event_payload.get("context", {}),
             "match_totals": totals,
             "warnings": [ScorelineAgent._zh_warning(warning) for warning in event_payload.get("warnings", [])],
+        }
+
+    @staticmethod
+    def _uncertainty_section(uncertainty_payload: dict) -> dict[str, object]:
+        if not uncertainty_payload:
+            return {
+                "used": False,
+                "summary": "本次没有启用不确定性区间，输出的是单点概率。",
+            }
+        intervals = uncertainty_payload.get("intervals", {})
+        return {
+            "used": True,
+            "summary": (
+                f"使用 {uncertainty_payload.get('samples')} 次 lambda 扰动样本生成 p05/p50/p95 区间；"
+                "这是轻量不确定性代理，不是完整 Bayesian 后验。"
+            ),
+            "method": uncertainty_payload.get("method"),
+            "bayesian_status": uncertainty_payload.get("bayesian_status"),
+            "intervals": intervals,
+            "warnings": uncertainty_payload.get("warnings", []),
         }
 
     @staticmethod

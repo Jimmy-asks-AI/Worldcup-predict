@@ -3,10 +3,10 @@
   "tactics_rows": 48,
   "referee_prior_rows": 1,
   "weather_rows": 35,
-  "player_performance_rows": 248,
+  "player_performance_rows": 433,
   "fifa_ranking_rows": 211,
   "fifa_ranking_2026_team_rows": 48,
-  "event_half_team_rows": 32,
+  "event_half_team_rows": 64,
   "outputs": {
     "fifa_ranking_snapshot": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\worldcup_data_audit\\data\\processed\\fifa_ranking_snapshot.csv",
     "fifa_ranking_raw": "E:\\Vibe-coding\\\u5c0f\u7ea2\u4e66\\worldcup_data_audit\\data\\raw\\fifa_rankings_men_latest.json",

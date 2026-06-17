@@ -16,17 +16,6 @@
   "brier_score": 0.616127,
   "log_loss": 1.054189,
   "ranked_probability_score": 0.220728,
-  "outcome_accuracy": 0.514706,
-  "exact_score_accuracy": 0.095588,
-  "top3_scoreline_accuracy": 0.242647,
-  "home_goal_mae": 1.076976,
-  "away_goal_mae": 0.917474,
-  "total_goal_mae": 1.448381,
-  "combined_goal_mae": 0.997225,
-  "home_goal_rmse": 1.417002,
-  "away_goal_rmse": 1.124603,
-  "total_goal_rmse": 1.873439,
-  "combined_goal_rmse": 1.279184,
   "calibration": [
     {
       "bucket": "0.3-0.4",
@@ -73,6 +62,6 @@
   ],
   "warnings": [
     "This backtest uses rolling World Cup-only Elo and scoring history; it does not validate lineup features unless historical pre-kickoff lineup files are supplied in a future extension.",
-    "Use log_loss, Brier score, RPS, calibration buckets, exact score accuracy, and goal MAE/RMSE to decide whether a model change improves out-of-sample predictions."
+    "Use log_loss, Brier score, RPS, and calibration buckets to decide whether a lineup multiplier improves out-of-sample predictions."
   ]
 }

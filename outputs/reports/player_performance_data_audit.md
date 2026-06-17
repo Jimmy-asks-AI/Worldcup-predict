@@ -1,6 +1,6 @@
 # Player Performance Data Audit
 
-Generated: 2026-06-16T09:31:43.817375+00:00
+Generated: 2026-06-17T03:10:45.597442+00:00
 
 ## Verdict
 
@@ -21,10 +21,10 @@ The next step was data acquisition and validation, not model integration. The au
 
 - StatsBomb open-data match metadata rows discovered: 3961
 - Male non-youth competition-season rows discovered: 66
-- Local StatsBomb event files currently available: 8
-- Player-match sample rows generated from local event files: 248
-- Unique player identities in sample: 182
-- Teams represented in local sample: 11
+- Local StatsBomb event files currently available: 16
+- Player-match sample rows generated from local event files: 494
+- Unique player identities in sample: 323
+- Teams represented in local sample: 18
 
 ## Source Findings
 
@@ -129,11 +129,3 @@ Required before implementation:
 | statsbomb_matches_53_106 | ok | 31 matches |
 | statsbomb_matches_72_107 | ok | 64 matches |
 | statsbomb_matches_72_30 | ok | 52 matches |
-| statsbomb_lineups_3857255 | ok | 2 teams |
-| statsbomb_lineups_3857271 | ok | 2 teams |
-| statsbomb_lineups_3857272 | ok | 2 teams |
-| statsbomb_lineups_3857274 | ok | 2 teams |
-| statsbomb_lineups_3857276 | ok | 2 teams |
-| statsbomb_lineups_3857277 | ok | 2 teams |
-| statsbomb_lineups_3857278 | ok | 2 teams |
-| statsbomb_lineups_3857296 | ok | 2 teams |

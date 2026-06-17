@@ -97,6 +97,9 @@ class MatchPrediction:
     context_adjustment: dict[str, Any] = field(default_factory=dict)
     event_prediction: dict[str, Any] = field(default_factory=dict)
     explanation: dict[str, Any] = field(default_factory=dict)
+    score_model: str = "independent_poisson"
+    score_model_parameters: dict[str, Any] = field(default_factory=dict)
+    uncertainty: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

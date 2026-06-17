@@ -1,0 +1,67 @@
+{
+  "config": {
+    "data": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\processed\\international_results_worldcup_only.csv",
+    "start_year": 2018,
+    "end_year": null,
+    "min_prior_matches": 1,
+    "recent_window": 10,
+    "elo_k": 30.0,
+    "max_goals": 7,
+    "score_model": "dixon_coles",
+    "dixon_coles_rho": -0.08,
+    "time_safe": true
+  },
+  "matches_evaluated": 136,
+  "matches_skipped_insufficient_history": 4,
+  "brier_score": 0.617039,
+  "log_loss": 1.059812,
+  "ranked_probability_score": 0.22088,
+  "calibration": [
+    {
+      "bucket": "0.3-0.4",
+      "count": 14,
+      "avg_confidence": 0.368641,
+      "accuracy": 0.428571
+    },
+    {
+      "bucket": "0.4-0.5",
+      "count": 34,
+      "avg_confidence": 0.447039,
+      "accuracy": 0.382353
+    },
+    {
+      "bucket": "0.5-0.6",
+      "count": 33,
+      "avg_confidence": 0.552196,
+      "accuracy": 0.606061
+    },
+    {
+      "bucket": "0.6-0.7",
+      "count": 30,
+      "avg_confidence": 0.651652,
+      "accuracy": 0.6
+    },
+    {
+      "bucket": "0.7-0.8",
+      "count": 15,
+      "avg_confidence": 0.74884,
+      "accuracy": 0.6
+    },
+    {
+      "bucket": "0.8-0.9",
+      "count": 8,
+      "avg_confidence": 0.848101,
+      "accuracy": 0.5
+    },
+    {
+      "bucket": "0.9-1.0",
+      "count": 2,
+      "avg_confidence": 0.932304,
+      "accuracy": 0.5
+    }
+  ],
+  "warnings": [
+    "This backtest uses rolling World Cup-only Elo and scoring history; it does not validate lineup features unless historical pre-kickoff lineup files are supplied in a future extension.",
+    "Use log_loss, Brier score, RPS, and calibration buckets to decide whether a lineup multiplier improves out-of-sample predictions."
+  ]
+}

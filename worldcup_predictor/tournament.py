@@ -9,6 +9,7 @@ from pathlib import Path
 from .aliases import normalize_team
 from .data import DEFAULT_DATA_DIR, DataAgent
 from .models import MatchPrediction, TournamentOutcome
+from .score_models import sample_scoreline, scoreline_matrix
 from .scoreline import ScorelineAgent
 from .strength import StrengthAgent, elo_win_probability
 
@@ -40,6 +41,7 @@ class TournamentAgent:
         self.scoreline = scoreline or ScorelineAgent(strength)
         self.seed = seed
         self._prediction_cache: dict[tuple[str, str, str], MatchPrediction] = {}
+        self._score_matrix_cache: dict[tuple[str, str, str], list[list[float]]] = {}
 
     def _prediction(self, match_id: str, home: str, away: str) -> MatchPrediction:
         key = (str(match_id), normalize_team(home), normalize_team(away))
@@ -48,11 +50,17 @@ class TournamentAgent:
         return self._prediction_cache[key]
 
     def _sample_match(self, rng: random.Random, match_id: str, home: str, away: str) -> tuple[int, int]:
-        pred = self._prediction(match_id, home, away)
-        return (
-            self.scoreline._poisson_sample(rng, pred.lambda_home),
-            self.scoreline._poisson_sample(rng, pred.lambda_away),
-        )
+        key = (str(match_id), normalize_team(home), normalize_team(away))
+        if key not in self._score_matrix_cache:
+            pred = self._prediction(match_id, home, away)
+            self._score_matrix_cache[key] = scoreline_matrix(
+                pred.lambda_home,
+                pred.lambda_away,
+                max_goals=self.scoreline.max_goals,
+                score_model=self.scoreline.score_model,
+                dixon_coles_rho=self.scoreline.dixon_coles_rho,
+            )
+        return sample_scoreline(rng, self._score_matrix_cache[key])
 
     def _penalty_home_win(self, home: str, away: str) -> float:
         h = self.scoreline.strength.team_strength(home)

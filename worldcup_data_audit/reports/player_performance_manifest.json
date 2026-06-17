@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-16T09:31:43.817880+00:00",
+  "generated_at_utc": "2026-06-17T03:10:45.597954+00:00",
   "verdict": "not_sufficient_for_model_gate",
   "source_manifest": "E:\\Vibe-coding\\小红书\\inputs\\player_performance\\source_manifest.csv",
   "player_match_contract": "E:\\Vibe-coding\\小红书\\inputs\\player_performance\\player_match_performance.csv",
@@ -575,66 +575,10 @@
       "ok": true,
       "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_matches_all\\matches_72_30.json",
       "note": "52 matches"
-    },
-    {
-      "name": "statsbomb_lineups_3857255",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857255.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857255.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857271",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857271.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857271.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857272",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857272.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857272.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857274",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857274.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857274.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857276",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857276.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857276.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857277",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857277.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857277.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857278",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857278.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857278.json",
-      "note": "2 teams"
-    },
-    {
-      "name": "statsbomb_lineups_3857296",
-      "url": "https://raw.githubusercontent.com/statsbomb/open-data/master/data/lineups/3857296.json",
-      "ok": true,
-      "path": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\raw\\statsbomb_lineups_3857296.json",
-      "note": "2 teams"
     }
   ],
   "statsbomb_competition_seasons": 80,
   "statsbomb_match_metadata_rows": 3961,
-  "statsbomb_sample_player_match_rows": 248,
-  "statsbomb_sample_player_identities": 182
+  "statsbomb_sample_player_match_rows": 494,
+  "statsbomb_sample_player_identities": 323
 }

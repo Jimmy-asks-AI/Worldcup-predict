@@ -11,6 +11,7 @@ from .models import MatchPrediction, TournamentOutcome
 from .scoreline import ScorelineAgent
 from .strength import StrengthAgent
 from .tournament import TournamentAgent
+from .uncertainty import UncertaintyAgent
 
 
 class ReportAgent:
@@ -18,6 +19,24 @@ class ReportAgent:
         self.output_dir = Path(output_dir)
         self.pred_dir = self.output_dir / "predictions"
         self.report_dir = self.output_dir / "reports"
+
+    @staticmethod
+    def tournament_randomness_summary(outcomes: list[TournamentOutcome]) -> dict[str, float | int | str]:
+        if not outcomes:
+            return {}
+        sorted_outcomes = sorted(outcomes, key=lambda item: item.p_champion, reverse=True)
+        champion_probs = [max(0.0, float(item.p_champion)) for item in sorted_outcomes]
+        hhi = sum(prob * prob for prob in champion_probs)
+        top_team = sorted_outcomes[0]
+        return {
+            "top_team": top_team.team,
+            "top1_champion_probability": top_team.p_champion,
+            "top3_champion_probability": sum(champion_probs[:3]),
+            "top10_champion_probability": sum(champion_probs[:10]),
+            "teams_at_or_above_5pct": sum(1 for prob in champion_probs if prob >= 0.05),
+            "teams_at_or_above_1pct": sum(1 for prob in champion_probs if prob >= 0.01),
+            "effective_champion_contenders": (1.0 / hhi) if hhi > 0 else 0.0,
+        }
 
     def write_match_predictions(self, predictions: list[MatchPrediction]) -> Path:
         self.pred_dir.mkdir(parents=True, exist_ok=True)
@@ -65,6 +84,7 @@ class ReportAgent:
             f"- 最可能比分：{sample_prediction.top_scorelines[0]['scoreline']}，概率 {sample_prediction.top_scorelines[0]['probability']:.2%}",
             f"- 胜平负：{sample_prediction.home_team} 胜 {sample_prediction.p_home_win:.1%}，平 {sample_prediction.p_draw:.1%}，{sample_prediction.away_team} 胜 {sample_prediction.p_away_win:.1%}",
             f"- 预期总进球：{sample_prediction.expected_goals}",
+            f"- 比分模型：{sample_prediction.score_model}",
         ]
         if explanation:
             factors = explanation.get("factors", {})
@@ -72,6 +92,7 @@ class ReportAgent:
             lineup = factors.get("lineup_and_availability", {})
             match_context = factors.get("match_context", {})
             data_quality = factors.get("data_quality", {})
+            uncertainty = factors.get("uncertainty", {})
             lambda_path = explanation.get("lambda_path", {})
             method = explanation.get("method", [])
             lines.extend(
@@ -84,6 +105,7 @@ class ReportAgent:
                     f"- 球队强度：{strength.get('summary', '')}",
                     f"- 阵容/伤停/替补：{lineup.get('summary', '')}",
                     f"- 非赔率上下文：{match_context.get('summary', '')}",
+                    f"- 不确定性区间：{uncertainty.get('summary', '')}",
                     f"- 数据缺口：{data_quality.get('summary', '')}",
                 ]
             )
@@ -110,6 +132,50 @@ class ReportAgent:
             lines.append("")
         else:
             lines.append("")
+        uncertainty_payload = sample_prediction.uncertainty or {}
+        intervals = uncertainty_payload.get("intervals") or {}
+        if intervals:
+            lines.extend(
+                [
+                    "## 单场不确定性区间",
+                    "",
+                    "| 指标 | p05 | p50 | p95 |",
+                    "|---|---:|---:|---:|",
+                ]
+            )
+            names = {
+                "p_home_win": f"{sample_prediction.home_team} 胜",
+                "p_draw": "平局",
+                "p_away_win": f"{sample_prediction.away_team} 胜",
+                "expected_goals": "预期总进球",
+            }
+            for key in ["p_home_win", "p_draw", "p_away_win", "expected_goals"]:
+                item = intervals.get(key, {})
+                lines.append(
+                    f"| {names[key]} | {float(item.get('p05', 0)):.3f} | "
+                    f"{float(item.get('p50', 0)):.3f} | {float(item.get('p95', 0)):.3f} |"
+                )
+            lines.extend(
+                [
+                    "",
+                    f"- 方法：{uncertainty_payload.get('method')}，样本数 {uncertainty_payload.get('samples')}，seed {uncertainty_payload.get('seed')}。",
+                    "- 注意：这是围绕最终 lambda 的轻量扰动区间，不是完整 Bayesian bivariate Poisson 后验。",
+                    "",
+                ]
+            )
+        randomness = self.tournament_randomness_summary(outcomes)
+        if randomness:
+            lines.extend(
+                [
+                    "## 2026 赛制随机性",
+                    "",
+                    "- 赛制路径：48 支球队分成 12 个小组，小组前二和 8 个最佳第三名进入 32 强；冠军需要从 32 强开始连续通过 5 轮淘汰赛。",
+                    f"- 冠军概率集中度：最高冠军概率为 {float(randomness['top1_champion_probability']):.1%}（{randomness['top_team']}），Top 3 合计 {float(randomness['top3_champion_probability']):.1%}，Top 10 合计 {float(randomness['top10_champion_probability']):.1%}。",
+                    f"- 有效争冠球队数：按冠军概率 Herfindahl 指数折算约 {float(randomness['effective_champion_contenders']):.1f} 支；冠军概率不低于 5% 的球队 {randomness['teams_at_or_above_5pct']} 支，不低于 1% 的球队 {randomness['teams_at_or_above_1pct']} 支。",
+                    "- 解释：这是把当前 Monte Carlo 输出转成赛制风险说明，不是新增数据源。参赛队伍更多、淘汰赛轮次更多，强队也需要多次跨过单场淘汰的不确定性，所以冠军概率会比单场胜率更分散。",
+                    "",
+                ]
+            )
         lines.extend(
             [
             "## 冠军概率 Top 10",
@@ -187,8 +253,11 @@ class ReportAgent:
                 "## 数据说明",
                 "",
                 "- 基础模型使用赛程、历史世界杯赛果、自算 Elo、近期国家队状态、已完赛真实比分。",
+                "- 比分模型默认使用独立 Poisson；也可用 `--score-model dixon_coles` 启用 Dixon-Coles 低比分相关性修正。",
+                "- 单场预测可用 `--include-uncertainty` 输出 p05/p50/p95 区间；当前实现是 lbenz730 Bayesian 思路启发的轻量 lambda 扰动代理，不是完整 Bayesian 模型。",
                 "- 可选非赔率上下文包括官方阵容/伤停/替补、EA FC 球员评分、球员历史表现、天气、旅行疲劳、战术阵型和裁判倾向。",
                 "- 事件数量预测使用 StatsBomb 半场事件样本，输出黄牌、红牌、角球、任意球、点球的上下半场预期。",
+                "- 整届赛事报告包含 2026 新赛制随机性解释：48 队、12 组、32 强和 5 轮淘汰赛会让冠军概率天然更分散。",
                 "- 真实赔率数据被明确排除；不会进入当前概率计算。",
                 "- 中文解释只解释结构化模型输出，不使用 LLM 自行判断比赛结果。",
             ]
@@ -198,11 +267,25 @@ class ReportAgent:
         return path
 
 
-def build_report(runs: int = 20000, lineup_file: str | None = None) -> dict[str, str]:
+def build_report(
+    runs: int = 20000,
+    lineup_file: str | None = None,
+    score_model: str = "independent_poisson",
+    dixon_coles_rho: float = -0.08,
+    include_uncertainty: bool = False,
+    uncertainty_samples: int = 500,
+) -> dict[str, str]:
     data = DataAgent()
     strength = StrengthAgent(data.data_dir)
     lineup = LineupAgent(lineup_file) if lineup_file else None
-    scoreline = ScorelineAgent(strength, lineup=lineup, events=EventAgent(data.data_dir))
+    scoreline = ScorelineAgent(
+        strength,
+        lineup=lineup,
+        events=EventAgent(data.data_dir),
+        score_model=score_model,
+        dixon_coles_rho=dixon_coles_rho,
+        uncertainty=UncertaintyAgent(samples=uncertainty_samples) if include_uncertainty else None,
+    )
     tournament = TournamentAgent(data=data, scoreline=scoreline)
     sample = scoreline.predict("France", "Senegal")
     outcomes, groups = tournament.simulate(runs=runs)

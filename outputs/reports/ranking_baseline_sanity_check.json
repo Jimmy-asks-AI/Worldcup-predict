@@ -1,0 +1,487 @@
+{
+  "home_team": "France",
+  "away_team": "Senegal",
+  "match_id": "97",
+  "purpose": "kamil_kucharski_inspired_fifa_ranking_poisson_sanity_check",
+  "main_model": {
+    "home_team": "France",
+    "away_team": "Senegal",
+    "lambda_home": 2.1266,
+    "lambda_away": 0.8635,
+    "p_home_win": 0.663645,
+    "p_draw": 0.195038,
+    "p_away_win": 0.141317,
+    "top_scorelines": [
+      {
+        "scoreline": "2-0",
+        "home_goals": 2,
+        "away_goals": 0,
+        "probability": 0.113883
+      },
+      {
+        "scoreline": "1-0",
+        "home_goals": 1,
+        "away_goals": 0,
+        "probability": 0.107103
+      },
+      {
+        "scoreline": "2-1",
+        "home_goals": 2,
+        "away_goals": 1,
+        "probability": 0.098338
+      },
+      {
+        "scoreline": "1-1",
+        "home_goals": 1,
+        "away_goals": 1,
+        "probability": 0.092483
+      },
+      {
+        "scoreline": "3-0",
+        "home_goals": 3,
+        "away_goals": 0,
+        "probability": 0.080728
+      },
+      {
+        "scoreline": "3-1",
+        "home_goals": 3,
+        "away_goals": 1,
+        "probability": 0.069708
+      },
+      {
+        "scoreline": "0-0",
+        "home_goals": 0,
+        "away_goals": 0,
+        "probability": 0.050363
+      },
+      {
+        "scoreline": "0-1",
+        "home_goals": 0,
+        "away_goals": 1,
+        "probability": 0.043489
+      },
+      {
+        "scoreline": "4-0",
+        "home_goals": 4,
+        "away_goals": 0,
+        "probability": 0.042919
+      },
+      {
+        "scoreline": "2-2",
+        "home_goals": 2,
+        "away_goals": 2,
+        "probability": 0.042457
+      }
+    ],
+    "expected_goals": 2.9901,
+    "warnings": [],
+    "match_id": "97",
+    "lineup_adjustment": {},
+    "context_adjustment": {},
+    "event_prediction": {
+      "source": "statsbomb_event_half_team_summary",
+      "sample_rows": 64,
+      "context": {
+        "tempo_index": 1.1283,
+        "discipline_index": 1.0,
+        "set_piece_index": 1.0,
+        "penalty_rate_index": 1.0
+      },
+      "teams": {
+        "home": {
+          "yellow_cards": {
+            "first_half_expected": 0.0,
+            "second_half_expected": 2.0,
+            "total_expected": 2.0,
+            "most_likely_total": 2
+          },
+          "red_cards": {
+            "first_half_expected": 0.0,
+            "second_half_expected": 0.0,
+            "total_expected": 0.0,
+            "most_likely_total": 0
+          },
+          "corners": {
+            "first_half_expected": 2.257,
+            "second_half_expected": 0.0,
+            "total_expected": 2.257,
+            "most_likely_total": 2
+          },
+          "free_kicks": {
+            "first_half_expected": 12.412,
+            "second_half_expected": 6.77,
+            "total_expected": 19.182,
+            "most_likely_total": 19
+          },
+          "penalties": {
+            "first_half_expected": 0.0,
+            "second_half_expected": 0.0,
+            "total_expected": 0.0,
+            "most_likely_total": 0
+          }
+        },
+        "away": {
+          "yellow_cards": {
+            "first_half_expected": 0.594,
+            "second_half_expected": 0.812,
+            "total_expected": 1.406,
+            "most_likely_total": 1
+          },
+          "red_cards": {
+            "first_half_expected": 0.0,
+            "second_half_expected": 0.0,
+            "total_expected": 0.0,
+            "most_likely_total": 0
+          },
+          "corners": {
+            "first_half_expected": 1.869,
+            "second_half_expected": 2.257,
+            "total_expected": 4.125,
+            "most_likely_total": 4
+          },
+          "free_kicks": {
+            "first_half_expected": 7.334,
+            "second_half_expected": 7.264,
+            "total_expected": 14.598,
+            "most_likely_total": 14
+          },
+          "penalties": {
+            "first_half_expected": 0.031,
+            "second_half_expected": 0.062,
+            "total_expected": 0.094,
+            "most_likely_total": 0
+          }
+        }
+      },
+      "match_totals": {
+        "yellow_cards": {
+          "first_half_expected": 0.594,
+          "second_half_expected": 2.812,
+          "total_expected": 3.406,
+          "most_likely_total": 3
+        },
+        "red_cards": {
+          "first_half_expected": 0.0,
+          "second_half_expected": 0.0,
+          "total_expected": 0.0,
+          "most_likely_total": 0
+        },
+        "corners": {
+          "first_half_expected": 4.126,
+          "second_half_expected": 2.257,
+          "total_expected": 6.383,
+          "most_likely_total": 6
+        },
+        "free_kicks": {
+          "first_half_expected": 19.746,
+          "second_half_expected": 14.034,
+          "total_expected": 33.78,
+          "most_likely_total": 33
+        },
+        "penalties": {
+          "first_half_expected": 0.031,
+          "second_half_expected": 0.062,
+          "total_expected": 0.093,
+          "most_likely_total": 0
+        }
+      },
+      "warnings": [
+        "Senegal missing event sample, fallback global half rates"
+      ]
+    },
+    "explanation": {
+      "language": "zh-CN",
+      "headline": "模型认为 France 是更可能获胜的一方，胜率约 66.4%。",
+      "score_model": {
+        "score_model": "independent_poisson",
+        "max_goals": 7
+      },
+      "method": [
+        "先用世界杯历史赛果得到基础进球率。",
+        "再用 Elo、FIFA 排名、近期进失球、世界杯历史表现修正两队进球期望。",
+        "如果提供赛前阵容、伤停、替补计划和球员评分，再把这些转成攻防乘数。",
+        "如果启用上下文数据，再加入球员表现、旅行疲劳、战术、天气和裁判环境。",
+        "最后用 0-0 到 7-7 的独立 Poisson 比分矩阵汇总比分概率和胜平负概率。"
+      ],
+      "outcome": {
+        "home_team": "France",
+        "away_team": "Senegal",
+        "match_id": "97",
+        "p_home_win": 0.663645,
+        "p_draw": 0.195038,
+        "p_away_win": 0.141317,
+        "most_likely_scoreline": {
+          "scoreline": "2-0",
+          "home_goals": 2,
+          "away_goals": 0,
+          "probability": 0.113883
+        },
+        "top_scorelines": [
+          {
+            "scoreline": "2-0",
+            "home_goals": 2,
+            "away_goals": 0,
+            "probability": 0.113883
+          },
+          {
+            "scoreline": "1-0",
+            "home_goals": 1,
+            "away_goals": 0,
+            "probability": 0.107103
+          },
+          {
+            "scoreline": "2-1",
+            "home_goals": 2,
+            "away_goals": 1,
+            "probability": 0.098338
+          },
+          {
+            "scoreline": "1-1",
+            "home_goals": 1,
+            "away_goals": 1,
+            "probability": 0.092483
+          },
+          {
+            "scoreline": "3-0",
+            "home_goals": 3,
+            "away_goals": 0,
+            "probability": 0.080728
+          }
+        ],
+        "expected_goals": {
+          "France": 2.1266,
+          "Senegal": 0.8635,
+          "total": 2.9901
+        }
+      },
+      "lambda_path": {
+        "base": {
+          "France": 2.1266,
+          "Senegal": 0.8635
+        },
+        "final": {
+          "France": 2.1266,
+          "Senegal": 0.8635
+        },
+        "home_change_pct": 0.0,
+        "away_change_pct": 0.0,
+        "plain_text": "基础进球期望为 France 2.13、Senegal 0.86；叠加阵容/上下文后为 France 2.13、Senegal 0.86。"
+      },
+      "factors": {
+        "team_strength": {
+          "summary": "Elo 差为 +227.5，FIFA 排名差为 +12（正数代表主队排名更靠前）。",
+          "home": {
+            "team": "France",
+            "elo": 2121.8,
+            "fifa_rank": 3,
+            "fifa_points": 1870.7,
+            "recent_goals_for": 2.5,
+            "recent_goals_against": 0.9,
+            "recent_points_per_match": 2.55,
+            "worldcup_goals_for": 1.8630136986301369,
+            "worldcup_goals_against": 1.1643835616438356,
+            "warnings": []
+          },
+          "away": {
+            "team": "Senegal",
+            "elo": 1894.3,
+            "fifa_rank": 15,
+            "fifa_points": 1684.07,
+            "recent_goals_for": 1.6,
+            "recent_goals_against": 0.9,
+            "recent_points_per_match": 2.1,
+            "worldcup_goals_for": 1.3333333333333333,
+            "worldcup_goals_against": 1.4166666666666667,
+            "warnings": []
+          }
+        },
+        "lineup_and_availability": {
+          "used": false,
+          "summary": "本次没有传入赛前官方阵容文件，首发、伤停、停赛和替补策略没有改变进球期望。"
+        },
+        "match_context": {
+          "used": false,
+          "summary": "本次没有启用非赔率上下文文件，球员表现、天气、旅行、战术和裁判没有额外修正。"
+        },
+        "event_counts": {
+          "used": true,
+          "summary": "事件预测样本行数 64；输出黄牌、红牌、角球、任意球、点球的上下半场预期。",
+          "context": {
+            "tempo_index": 1.1283,
+            "discipline_index": 1.0,
+            "set_piece_index": 1.0,
+            "penalty_rate_index": 1.0
+          },
+          "match_totals": {
+            "yellow_cards": {
+              "first_half_expected": 0.594,
+              "second_half_expected": 2.812,
+              "total_expected": 3.406,
+              "most_likely_total": 3
+            },
+            "red_cards": {
+              "first_half_expected": 0.0,
+              "second_half_expected": 0.0,
+              "total_expected": 0.0,
+              "most_likely_total": 0
+            },
+            "corners": {
+              "first_half_expected": 4.126,
+              "second_half_expected": 2.257,
+              "total_expected": 6.383,
+              "most_likely_total": 6
+            },
+            "free_kicks": {
+              "first_half_expected": 19.746,
+              "second_half_expected": 14.034,
+              "total_expected": 33.78,
+              "most_likely_total": 33
+            },
+            "penalties": {
+              "first_half_expected": 0.031,
+              "second_half_expected": 0.062,
+              "total_expected": 0.093,
+              "most_likely_total": 0
+            }
+          },
+          "warnings": [
+            "Senegal 缺少球队事件样本，事件数量回退到全局半场均值"
+          ]
+        },
+        "uncertainty": {
+          "used": false,
+          "summary": "本次没有启用不确定性区间，输出的是单点概率。"
+        },
+        "data_quality": {
+          "summary": "缺少赛前官方阵容/伤停/替补策略文件；未启用非赔率上下文；Senegal 缺少球队事件样本，事件数量回退到全局半场均值",
+          "gaps": [
+            "缺少赛前官方阵容/伤停/替补策略文件",
+            "未启用非赔率上下文",
+            "Senegal 缺少球队事件样本，事件数量回退到全局半场均值"
+          ],
+          "warnings": []
+        }
+      },
+      "warnings": [],
+      "caveats": [
+        "这是概率模型输出，不是确定赛果。",
+        "当前模型不使用真实博彩赔率。",
+        "EA FC 球员评分只在阵容文件缺少 rating 时作为 fallback，不是 FIFA 官方球员评分。"
+      ]
+    },
+    "score_model": "independent_poisson",
+    "score_model_parameters": {
+      "score_model": "independent_poisson",
+      "max_goals": 7
+    },
+    "uncertainty": {}
+  },
+  "ranking_baseline": {
+    "baseline": "fifa_ranking_poisson",
+    "source_inspiration": "kamil-kucharski/world-cup-2026-prediction FIFA ranking Poisson baseline",
+    "match_id": "97",
+    "home_team": "France",
+    "away_team": "Senegal",
+    "lambda_home": 1.5078,
+    "lambda_away": 1.318,
+    "p_home_win": 0.417646,
+    "p_draw": 0.250259,
+    "p_away_win": 0.332095,
+    "expected_goals": 2.8258,
+    "top_scorelines": [
+      {
+        "scoreline": "1-1",
+        "home_goals": 1,
+        "away_goals": 1,
+        "probability": 0.117797
+      },
+      {
+        "scoreline": "1-0",
+        "home_goals": 1,
+        "away_goals": 0,
+        "probability": 0.089377
+      },
+      {
+        "scoreline": "2-1",
+        "home_goals": 2,
+        "away_goals": 1,
+        "probability": 0.088809
+      },
+      {
+        "scoreline": "0-1",
+        "home_goals": 0,
+        "away_goals": 1,
+        "probability": 0.078123
+      },
+      {
+        "scoreline": "1-2",
+        "home_goals": 1,
+        "away_goals": 2,
+        "probability": 0.077627
+      },
+      {
+        "scoreline": "2-0",
+        "home_goals": 2,
+        "away_goals": 0,
+        "probability": 0.067383
+      },
+      {
+        "scoreline": "0-0",
+        "home_goals": 0,
+        "away_goals": 0,
+        "probability": 0.059275
+      },
+      {
+        "scoreline": "2-2",
+        "home_goals": 2,
+        "away_goals": 2,
+        "probability": 0.058524
+      },
+      {
+        "scoreline": "0-2",
+        "home_goals": 0,
+        "away_goals": 2,
+        "probability": 0.051482
+      },
+      {
+        "scoreline": "3-1",
+        "home_goals": 3,
+        "away_goals": 1,
+        "probability": 0.044637
+      }
+    ],
+    "features": {
+      "home_fifa_rank": 3.0,
+      "away_fifa_rank": 15.0,
+      "home_fifa_points": 1870.7,
+      "away_fifa_points": 1684.07,
+      "ranking_edge": 0.067187,
+      "global_goal_average": 1.41291,
+      "home_host_multiplier": 1.0,
+      "away_host_multiplier": 1.0
+    },
+    "score_model": "independent_poisson",
+    "score_model_parameters": {
+      "score_model": "independent_poisson",
+      "max_goals": 7
+    },
+    "warnings": [],
+    "caveats": [
+      "This is a simple current FIFA ranking/points Poisson sanity-check baseline, not the production model.",
+      "It does not use Elo, recent form, World Cup team history, lineups, player ratings, weather, travel, tactics, referee context, or event samples.",
+      "It uses the current FIFA ranking snapshot and is not a time-safe historical backtest baseline."
+    ]
+  },
+  "comparison": {
+    "p_home_win_delta_main_minus_baseline": 0.245999,
+    "p_draw_delta_main_minus_baseline": -0.055221,
+    "p_away_win_delta_main_minus_baseline": -0.190778,
+    "lambda_home_delta_main_minus_baseline": 0.6188,
+    "lambda_away_delta_main_minus_baseline": -0.4545,
+    "same_top_scoreline": false
+  },
+  "caveats": [
+    "The ranking baseline is a simple comparison tool and does not replace the main model.",
+    "The ranking baseline uses the current FIFA ranking snapshot, so it is not a time-safe historical backtest."
+  ]
+}

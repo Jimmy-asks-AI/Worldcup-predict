@@ -1,0 +1,159 @@
+{
+  "purpose": "alan_turing_institute_inspired_dixon_coles_rho_tuning",
+  "source_project": "https://github.com/alan-turing-institute/WorldCupPrediction",
+  "config": {
+    "data": "E:\\Vibe-coding\\小红书\\worldcup_data_audit\\data\\processed\\international_results_worldcup_only.csv",
+    "start_year": 2018,
+    "end_year": null,
+    "min_prior_matches": 1,
+    "rho_values": [
+      -0.16,
+      -0.12,
+      -0.08,
+      -0.04,
+      0.0,
+      0.04
+    ],
+    "time_safe": true,
+    "default_changes_prediction": false
+  },
+  "results": [
+    {
+      "score_model": "independent_poisson",
+      "dixon_coles_rho": null,
+      "matches_evaluated": 136,
+      "log_loss": 1.054189,
+      "brier_score": 0.616127,
+      "ranked_probability_score": 0.220728,
+      "outcome_accuracy": 0.514706,
+      "exact_score_accuracy": 0.095588,
+      "top3_scoreline_accuracy": 0.242647,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    },
+    {
+      "score_model": "dixon_coles",
+      "dixon_coles_rho": -0.16,
+      "matches_evaluated": 136,
+      "log_loss": 1.067562,
+      "brier_score": 0.618828,
+      "ranked_probability_score": 0.221178,
+      "outcome_accuracy": 0.507353,
+      "exact_score_accuracy": 0.102941,
+      "top3_scoreline_accuracy": 0.220588,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    },
+    {
+      "score_model": "dixon_coles",
+      "dixon_coles_rho": -0.12,
+      "matches_evaluated": 136,
+      "log_loss": 1.063419,
+      "brier_score": 0.617823,
+      "ranked_probability_score": 0.221011,
+      "outcome_accuracy": 0.514706,
+      "exact_score_accuracy": 0.110294,
+      "top3_scoreline_accuracy": 0.227941,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    },
+    {
+      "score_model": "dixon_coles",
+      "dixon_coles_rho": -0.08,
+      "matches_evaluated": 136,
+      "log_loss": 1.059812,
+      "brier_score": 0.617039,
+      "ranked_probability_score": 0.22088,
+      "outcome_accuracy": 0.522059,
+      "exact_score_accuracy": 0.117647,
+      "top3_scoreline_accuracy": 0.220588,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    },
+    {
+      "score_model": "dixon_coles",
+      "dixon_coles_rho": -0.04,
+      "matches_evaluated": 136,
+      "log_loss": 1.056736,
+      "brier_score": 0.616473,
+      "ranked_probability_score": 0.220786,
+      "outcome_accuracy": 0.522059,
+      "exact_score_accuracy": 0.095588,
+      "top3_scoreline_accuracy": 0.235294,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    },
+    {
+      "score_model": "dixon_coles",
+      "dixon_coles_rho": 0.0,
+      "matches_evaluated": 136,
+      "log_loss": 1.054189,
+      "brier_score": 0.616127,
+      "ranked_probability_score": 0.220728,
+      "outcome_accuracy": 0.514706,
+      "exact_score_accuracy": 0.095588,
+      "top3_scoreline_accuracy": 0.242647,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    },
+    {
+      "score_model": "dixon_coles",
+      "dixon_coles_rho": 0.04,
+      "matches_evaluated": 136,
+      "log_loss": 1.052173,
+      "brier_score": 0.616001,
+      "ranked_probability_score": 0.220707,
+      "outcome_accuracy": 0.522059,
+      "exact_score_accuracy": 0.110294,
+      "top3_scoreline_accuracy": 0.242647,
+      "combined_goal_mae": 0.997225,
+      "combined_goal_rmse": 1.279184
+    }
+  ],
+  "best_by_log_loss": {
+    "score_model": "dixon_coles",
+    "dixon_coles_rho": 0.04,
+    "matches_evaluated": 136,
+    "log_loss": 1.052173,
+    "brier_score": 0.616001,
+    "ranked_probability_score": 0.220707,
+    "outcome_accuracy": 0.522059,
+    "exact_score_accuracy": 0.110294,
+    "top3_scoreline_accuracy": 0.242647,
+    "combined_goal_mae": 0.997225,
+    "combined_goal_rmse": 1.279184
+  },
+  "best_by_ranked_probability_score": {
+    "score_model": "dixon_coles",
+    "dixon_coles_rho": 0.04,
+    "matches_evaluated": 136,
+    "log_loss": 1.052173,
+    "brier_score": 0.616001,
+    "ranked_probability_score": 0.220707,
+    "outcome_accuracy": 0.522059,
+    "exact_score_accuracy": 0.110294,
+    "top3_scoreline_accuracy": 0.242647,
+    "combined_goal_mae": 0.997225,
+    "combined_goal_rmse": 1.279184
+  },
+  "deltas_vs_independent": {
+    "best_dixon_coles_log_loss_minus_independent": -0.002016,
+    "best_dixon_coles_brier_minus_independent": -0.000126,
+    "best_dixon_coles_rps_minus_independent": -2.1e-05,
+    "best_dixon_coles_top3_scoreline_accuracy_minus_independent": 0.0
+  },
+  "gate": {
+    "material_improvement_thresholds": {
+      "best_dixon_coles_log_loss_minus_independent": -0.005,
+      "best_dixon_coles_brier_minus_independent": -0.002,
+      "best_dixon_coles_rps_minus_independent": -0.001
+    },
+    "improved_probability_loss_metric_count": 0,
+    "default_enable_recommended": false,
+    "reason": "Keep independent Poisson as default unless a Dixon-Coles rho materially beats it on log-loss and at least two probability-loss metrics."
+  },
+  "warnings": [
+    "This tunes only the low-score Dixon-Coles correlation parameter; it does not add team, lineup, or context data.",
+    "Do not change the default score model from this report alone unless the gate recommends it and downstream reports remain coherent."
+  ]
+}

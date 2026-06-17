@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .aliases import normalize_team
 from .data import DEFAULT_DATA_DIR, OUTPUT_DIR, read_csv
-from .scoreline import ScorelineAgent
+from .score_models import aggregate_wdl, scoreline_matrix, sorted_scorelines, validate_score_model
 from .strength import elo_goal_multipliers, elo_win_probability
 
 
@@ -54,12 +54,16 @@ class BacktestAgent:
         min_prior_matches: int = 3,
         recent_window: int = 10,
         elo_k: float = 30.0,
+        score_model: str = "independent_poisson",
+        dixon_coles_rho: float = -0.08,
     ):
         self.data_dir = Path(data_dir)
         self.max_goals = max_goals
         self.min_prior_matches = min_prior_matches
         self.recent_window = recent_window
         self.elo_k = elo_k
+        self.score_model = validate_score_model(score_model)
+        self.dixon_coles_rho = dixon_coles_rho
         self.states: defaultdict[str, TeamBacktestState] = defaultdict(TeamBacktestState)
         self.total_goals = 0
         self.team_games = 0
@@ -71,6 +75,15 @@ class BacktestAgent:
         brier_sum = 0.0
         log_loss_sum = 0.0
         rps_sum = 0.0
+        outcome_correct = 0
+        exact_score_correct = 0
+        top3_scoreline_correct = 0
+        home_goal_abs_error = 0.0
+        away_goal_abs_error = 0.0
+        total_goal_abs_error = 0.0
+        home_goal_sq_error = 0.0
+        away_goal_sq_error = 0.0
+        total_goal_sq_error = 0.0
         calibration = defaultdict(lambda: {"count": 0, "confidence_sum": 0.0, "correct": 0})
 
         for row in rows:
@@ -90,12 +103,30 @@ class BacktestAgent:
                 self._update_after_match(home, away, hg, ag)
                 continue
 
-            probs = self._predict_wdl(home, away)
+            prediction = self._predict_distribution(home, away)
+            probs = prediction["wdl"]
             actual = self._actual_vector(hg, ag)
             brier_sum += sum((p - y) ** 2 for p, y in zip(probs, actual))
             actual_prob = sum(p * y for p, y in zip(probs, actual))
             log_loss_sum += -math.log(max(actual_prob, 1e-12))
             rps_sum += self._rps(probs, actual)
+            predicted_idx = probs.index(max(probs))
+            actual_idx = actual.index(1)
+            outcome_correct += int(predicted_idx == actual_idx)
+            top_scorelines = prediction["top_scorelines"]
+            exact_score = f"{hg}-{ag}"
+            exact_score_correct += int(top_scorelines[0]["scoreline"] == exact_score)
+            top3_scoreline_correct += int(exact_score in {row["scoreline"] for row in top_scorelines[:3]})
+            lam_h = prediction["lambda_home"]
+            lam_a = prediction["lambda_away"]
+            total_pred = lam_h + lam_a
+            total_actual = hg + ag
+            home_goal_abs_error += abs(lam_h - hg)
+            away_goal_abs_error += abs(lam_a - ag)
+            total_goal_abs_error += abs(total_pred - total_actual)
+            home_goal_sq_error += (lam_h - hg) ** 2
+            away_goal_sq_error += (lam_a - ag) ** 2
+            total_goal_sq_error += (total_pred - total_actual) ** 2
             self._add_calibration(calibration, probs, actual)
             evaluated += 1
             self._update_after_match(home, away, hg, ag)
@@ -111,6 +142,8 @@ class BacktestAgent:
                 "recent_window": self.recent_window,
                 "elo_k": self.elo_k,
                 "max_goals": self.max_goals,
+                "score_model": self.score_model,
+                "dixon_coles_rho": self.dixon_coles_rho if self.score_model == "dixon_coles" else None,
                 "time_safe": True,
             },
             "matches_evaluated": evaluated,
@@ -118,10 +151,21 @@ class BacktestAgent:
             "brier_score": round(brier_sum / evaluated, 6),
             "log_loss": round(log_loss_sum / evaluated, 6),
             "ranked_probability_score": round(rps_sum / evaluated, 6),
+            "outcome_accuracy": round(outcome_correct / evaluated, 6),
+            "exact_score_accuracy": round(exact_score_correct / evaluated, 6),
+            "top3_scoreline_accuracy": round(top3_scoreline_correct / evaluated, 6),
+            "home_goal_mae": round(home_goal_abs_error / evaluated, 6),
+            "away_goal_mae": round(away_goal_abs_error / evaluated, 6),
+            "total_goal_mae": round(total_goal_abs_error / evaluated, 6),
+            "combined_goal_mae": round((home_goal_abs_error + away_goal_abs_error) / (evaluated * 2), 6),
+            "home_goal_rmse": round(math.sqrt(home_goal_sq_error / evaluated), 6),
+            "away_goal_rmse": round(math.sqrt(away_goal_sq_error / evaluated), 6),
+            "total_goal_rmse": round(math.sqrt(total_goal_sq_error / evaluated), 6),
+            "combined_goal_rmse": round(math.sqrt((home_goal_sq_error + away_goal_sq_error) / (evaluated * 2)), 6),
             "calibration": self._format_calibration(calibration),
             "warnings": [
                 "This backtest uses rolling World Cup-only Elo and scoring history; it does not validate lineup features unless historical pre-kickoff lineup files are supplied in a future extension.",
-                "Use log_loss, Brier score, RPS, and calibration buckets to decide whether a lineup multiplier improves out-of-sample predictions.",
+                "Use log_loss, Brier score, RPS, calibration buckets, exact score accuracy, and goal MAE/RMSE to decide whether a model change improves out-of-sample predictions.",
             ],
         }
 
@@ -143,6 +187,9 @@ class BacktestAgent:
         return self.total_goals / self.team_games if self.team_games else 1.35
 
     def _predict_wdl(self, home: str, away: str) -> tuple[float, float, float]:
+        return self._predict_distribution(home, away)["wdl"]
+
+    def _predict_distribution(self, home: str, away: str) -> dict:
         base = self._global_goal_average()
         h = self.states[home]
         a = self.states[away]
@@ -157,29 +204,29 @@ class BacktestAgent:
         h_elo, a_elo = elo_goal_multipliers(h.elo - a.elo)
         lam_h = max(0.2, min(3.8, base * h_attack * a_def_vuln * h_elo))
         lam_a = max(0.2, min(3.8, base * a_attack * h_def_vuln * a_elo))
-        return self._poisson_wdl(lam_h, lam_a)
+        matrix = scoreline_matrix(
+            lam_h,
+            lam_a,
+            max_goals=self.max_goals,
+            score_model=self.score_model,
+            dixon_coles_rho=self.dixon_coles_rho,
+        )
+        return {
+            "lambda_home": lam_h,
+            "lambda_away": lam_a,
+            "wdl": aggregate_wdl(matrix),
+            "top_scorelines": sorted_scorelines(matrix),
+        }
 
     def _poisson_wdl(self, lam_h: float, lam_a: float) -> tuple[float, float, float]:
-        matrix = []
-        total = 0.0
-        for h_goals in range(self.max_goals + 1):
-            row = []
-            for a_goals in range(self.max_goals + 1):
-                p = ScorelineAgent.poisson_pmf(h_goals, lam_h) * ScorelineAgent.poisson_pmf(a_goals, lam_a)
-                row.append(p)
-                total += p
-            matrix.append(row)
-        p_home = p_draw = p_away = 0.0
-        for h_goals, row in enumerate(matrix):
-            for a_goals, p in enumerate(row):
-                p /= total
-                if h_goals > a_goals:
-                    p_home += p
-                elif h_goals == a_goals:
-                    p_draw += p
-                else:
-                    p_away += p
-        return p_home, p_draw, p_away
+        matrix = scoreline_matrix(
+            lam_h,
+            lam_a,
+            max_goals=self.max_goals,
+            score_model=self.score_model,
+            dixon_coles_rho=self.dixon_coles_rho,
+        )
+        return aggregate_wdl(matrix)
 
     @staticmethod
     def _actual_vector(hg: int, ag: int) -> tuple[int, int, int]:
@@ -245,11 +292,122 @@ def run_backtest(
     start_year: int | None = 1954,
     end_year: int | None = None,
     min_prior_matches: int = 3,
+    score_model: str = "independent_poisson",
+    dixon_coles_rho: float = -0.08,
 ) -> dict:
-    return BacktestAgent(data_dir=data_dir, min_prior_matches=min_prior_matches).run(
+    return BacktestAgent(
+        data_dir=data_dir,
+        min_prior_matches=min_prior_matches,
+        score_model=score_model,
+        dixon_coles_rho=dixon_coles_rho,
+    ).run(
         start_year=start_year,
         end_year=end_year,
     )
+
+
+def tune_dixon_coles_rho(
+    data_dir: Path | str = DEFAULT_DATA_DIR,
+    start_year: int | None = 2018,
+    end_year: int | None = None,
+    min_prior_matches: int = 3,
+    rho_values: list[float] | None = None,
+) -> dict:
+    candidates = rho_values or [-0.16, -0.12, -0.08, -0.04, 0.0, 0.04]
+    baseline = run_backtest(
+        data_dir=data_dir,
+        start_year=start_year,
+        end_year=end_year,
+        min_prior_matches=min_prior_matches,
+        score_model="independent_poisson",
+    )
+    rows = [_tuning_row("independent_poisson", None, baseline)]
+    for rho in candidates:
+        result = run_backtest(
+            data_dir=data_dir,
+            start_year=start_year,
+            end_year=end_year,
+            min_prior_matches=min_prior_matches,
+            score_model="dixon_coles",
+            dixon_coles_rho=rho,
+        )
+        rows.append(_tuning_row("dixon_coles", rho, result))
+    best_by_log_loss = min(rows, key=lambda item: item["log_loss"])
+    best_by_rps = min(rows, key=lambda item: item["ranked_probability_score"])
+    best_dc = min((row for row in rows if row["score_model"] == "dixon_coles"), key=lambda item: item["log_loss"])
+    deltas = {
+        "best_dixon_coles_log_loss_minus_independent": round(best_dc["log_loss"] - rows[0]["log_loss"], 6),
+        "best_dixon_coles_brier_minus_independent": round(best_dc["brier_score"] - rows[0]["brier_score"], 6),
+        "best_dixon_coles_rps_minus_independent": round(
+            best_dc["ranked_probability_score"] - rows[0]["ranked_probability_score"],
+            6,
+        ),
+        "best_dixon_coles_top3_scoreline_accuracy_minus_independent": round(
+            best_dc["top3_scoreline_accuracy"] - rows[0]["top3_scoreline_accuracy"],
+            6,
+        ),
+    }
+    material_thresholds = {
+        "best_dixon_coles_log_loss_minus_independent": -0.005,
+        "best_dixon_coles_brier_minus_independent": -0.002,
+        "best_dixon_coles_rps_minus_independent": -0.001,
+    }
+    improved_count = sum(1 for key, threshold in material_thresholds.items() if deltas[key] <= threshold)
+    recommended = best_by_log_loss["score_model"] == "dixon_coles" and improved_count >= 2
+    return {
+        "purpose": "alan_turing_institute_inspired_dixon_coles_rho_tuning",
+        "source_project": "https://github.com/alan-turing-institute/WorldCupPrediction",
+        "config": {
+            "data": str(Path(data_dir) / "international_results_worldcup_only.csv"),
+            "start_year": start_year,
+            "end_year": end_year,
+            "min_prior_matches": min_prior_matches,
+            "rho_values": candidates,
+            "time_safe": True,
+            "default_changes_prediction": False,
+        },
+        "results": rows,
+        "best_by_log_loss": best_by_log_loss,
+        "best_by_ranked_probability_score": best_by_rps,
+        "deltas_vs_independent": deltas,
+        "gate": {
+            "material_improvement_thresholds": material_thresholds,
+            "improved_probability_loss_metric_count": improved_count,
+            "default_enable_recommended": recommended,
+            "reason": (
+                "A Dixon-Coles rho candidate materially beat independent Poisson on log-loss and at least two probability-loss metrics."
+                if recommended
+                else "Keep independent Poisson as default unless a Dixon-Coles rho materially beats it on log-loss and at least two probability-loss metrics."
+            ),
+        },
+        "warnings": [
+            "This tunes only the low-score Dixon-Coles correlation parameter; it does not add team, lineup, or context data.",
+            "Do not change the default score model from this report alone unless the gate recommends it and downstream reports remain coherent.",
+        ],
+    }
+
+
+def _tuning_row(score_model: str, rho: float | None, result: dict) -> dict:
+    return {
+        "score_model": score_model,
+        "dixon_coles_rho": rho,
+        "matches_evaluated": result["matches_evaluated"],
+        "log_loss": result["log_loss"],
+        "brier_score": result["brier_score"],
+        "ranked_probability_score": result["ranked_probability_score"],
+        "outcome_accuracy": result["outcome_accuracy"],
+        "exact_score_accuracy": result["exact_score_accuracy"],
+        "top3_scoreline_accuracy": result["top3_scoreline_accuracy"],
+        "combined_goal_mae": result["combined_goal_mae"],
+        "combined_goal_rmse": result["combined_goal_rmse"],
+    }
+
+
+def write_dixon_coles_tuning_report(result: dict, output_path: Path | str | None = None) -> Path:
+    path = Path(output_path) if output_path else OUTPUT_DIR / "reports" / "dixon_coles_rho_tuning.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+    return path
 
 
 def write_backtest_report(result: dict, output_path: Path | str | None = None) -> Path:

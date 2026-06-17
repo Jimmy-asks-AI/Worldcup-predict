@@ -1,18 +1,26 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
-from worldcup_predictor.backtest import run_backtest
+from worldcup_predictor.audit import append_prediction_audit
+from worldcup_predictor.backtest import run_backtest, tune_dixon_coles_rho, write_dixon_coles_tuning_report
+from worldcup_predictor.baselines import RankingBaselineAgent, compare_with_main_prediction, write_ranking_baseline_report
+from worldcup_predictor.calibration import run_calibration_backtest, temperature_draw_calibrate
 from worldcup_predictor.context import MatchContextAgent
 from worldcup_predictor.data import DataAgent, read_csv
 from worldcup_predictor.events import EventAgent
 from worldcup_predictor.lineups import LineupAgent
 from worldcup_predictor.ratings import DEFAULT_PLAYER_RATINGS_FILE, PlayerRatingsAgent
+from worldcup_predictor.report import ReportAgent
+from worldcup_predictor.score_models import aggregate_wdl, scoreline_matrix
 from worldcup_predictor.scoreline import ScorelineAgent
 from worldcup_predictor.strength import StrengthAgent
 from worldcup_predictor.tournament import TournamentAgent
+from worldcup_predictor.uncertainty import UncertaintyAgent
 
 
 class WorldCupPredictorTests(unittest.TestCase):
@@ -51,6 +59,102 @@ class WorldCupPredictorTests(unittest.TestCase):
         self.assertIn("match_context", pred.explanation["factors"])
         self.assertIn("event_counts", pred.explanation["factors"])
         self.assertIn("data_quality", pred.explanation["factors"])
+        self.assertEqual(pred.score_model, "independent_poisson")
+        self.assertEqual(pred.uncertainty, {})
+        self.assertFalse(pred.explanation["factors"]["uncertainty"]["used"])
+
+    def test_dixon_coles_score_model_is_available_and_normalized(self):
+        independent = scoreline_matrix(1.2, 1.1, score_model="independent_poisson")
+        dixon_coles = scoreline_matrix(1.2, 1.1, score_model="dixon_coles", dixon_coles_rho=-0.08)
+        self.assertAlmostEqual(sum(sum(row) for row in dixon_coles), 1.0, delta=0.000001)
+        self.assertGreater(dixon_coles[0][0], independent[0][0])
+        self.assertGreater(dixon_coles[1][1], independent[1][1])
+        self.assertGreater(aggregate_wdl(dixon_coles)[1], aggregate_wdl(independent)[1])
+
+        pred = ScorelineAgent(self.strength, score_model="dixon_coles").predict("France", "Senegal")
+        total = pred.p_home_win + pred.p_draw + pred.p_away_win
+        self.assertAlmostEqual(total, 1.0, delta=0.001)
+        self.assertEqual(pred.score_model, "dixon_coles")
+        self.assertEqual(pred.score_model_parameters["score_model"], "dixon_coles")
+        self.assertIn("Dixon-Coles", " ".join(pred.explanation["method"]))
+
+    def test_dixon_coles_rho_tuning_reports_gate(self):
+        result = tune_dixon_coles_rho(
+            start_year=2018,
+            min_prior_matches=1,
+            rho_values=[-0.12, -0.08],
+        )
+        self.assertEqual(result["purpose"], "alan_turing_institute_inspired_dixon_coles_rho_tuning")
+        self.assertTrue(result["config"]["time_safe"])
+        self.assertFalse(result["config"]["default_changes_prediction"])
+        self.assertEqual(len(result["results"]), 3)
+        self.assertEqual(result["results"][0]["score_model"], "independent_poisson")
+        self.assertIn("best_by_log_loss", result)
+        self.assertIn("default_enable_recommended", result["gate"])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = write_dixon_coles_tuning_report(result, Path(tmp) / "rho.json")
+            self.assertTrue(path.exists())
+
+    def test_uncertainty_agent_adds_probability_intervals(self):
+        pred = ScorelineAgent(
+            self.strength,
+            uncertainty=UncertaintyAgent(samples=80, seed=2026),
+        ).predict("France", "Senegal")
+        payload = pred.uncertainty
+        self.assertTrue(payload["used"])
+        self.assertEqual(payload["bayesian_status"], "proxy_not_full_bayesian")
+        self.assertTrue(pred.explanation["factors"]["uncertainty"]["used"])
+        for key in ["p_home_win", "p_draw", "p_away_win", "expected_goals"]:
+            interval = payload["intervals"][key]
+            self.assertLessEqual(interval["p05"], interval["p50"])
+            self.assertLessEqual(interval["p50"], interval["p95"])
+        self.assertIn("lambda 扰动", pred.explanation["factors"]["uncertainty"]["summary"])
+
+    def test_prediction_audit_log_appends_jsonl_entries(self):
+        pred = self.scoreline.predict("France", "Senegal", match_id="999")
+        args = SimpleNamespace(
+            match_id="999",
+            lineup_file=None,
+            player_ratings_file=None,
+            player_performance_file=None,
+            weather_file=None,
+            travel_file=None,
+            tactics_file=None,
+            referee_file=None,
+            use_generated_context=False,
+            lineup_allowed_source=None,
+            allow_projected_lineups=False,
+            score_model=pred.score_model,
+            dixon_coles_rho=-0.08,
+            include_uncertainty=False,
+            uncertainty_samples=500,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "prediction_runs.jsonl"
+            append_prediction_audit(pred, "predict-match", args, output_path=path)
+            append_prediction_audit(pred, "predict-match", args, output_path=path)
+            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["run_type"], "predict_match")
+        self.assertEqual(rows[0]["prediction"]["home_team"], "France")
+        self.assertEqual(rows[0]["prediction"]["p_home_win"], pred.p_home_win)
+        self.assertFalse(rows[0]["pre_match_safe_boundary"]["uses_real_betting_odds"])
+        self.assertTrue(rows[0]["data_files"]["fixtures"]["exists"])
+        self.assertGreater(rows[0]["data_files"]["fixtures"]["rows"], 0)
+
+    def test_ranking_baseline_predicts_and_compares_with_main_model(self):
+        baseline = RankingBaselineAgent(self.data.data_dir).predict("France", "Senegal", match_id="997")
+        total = baseline["p_home_win"] + baseline["p_draw"] + baseline["p_away_win"]
+        self.assertAlmostEqual(total, 1.0, delta=0.001)
+        self.assertEqual(baseline["baseline"], "fifa_ranking_poisson")
+        self.assertIn("home_fifa_rank", baseline["features"])
+        self.assertTrue(baseline["caveats"])
+        main = self.scoreline.predict("France", "Senegal", match_id="997")
+        comparison = compare_with_main_prediction(baseline, main)
+        self.assertIn("p_home_win_delta_main_minus_baseline", comparison)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = write_ranking_baseline_report({"ranking_baseline": baseline, "comparison": comparison}, Path(tmp) / "baseline.json")
+            self.assertTrue(path.exists())
 
     def test_missing_team_elo_uses_fallback_warning(self):
         pred = self.scoreline.predict("Atlantis", "France")
@@ -317,10 +421,36 @@ class WorldCupPredictorTests(unittest.TestCase):
         self.assertGreater(result["log_loss"], 0)
         self.assertGreater(result["brier_score"], 0)
         self.assertGreater(result["ranked_probability_score"], 0)
+        self.assertGreaterEqual(result["outcome_accuracy"], 0)
+        self.assertGreaterEqual(result["exact_score_accuracy"], 0)
+        self.assertGreaterEqual(result["top3_scoreline_accuracy"], result["exact_score_accuracy"])
+        self.assertGreater(result["combined_goal_mae"], 0)
+        self.assertGreater(result["combined_goal_rmse"], 0)
+        self.assertGreater(result["total_goal_mae"], 0)
+        self.assertGreater(result["total_goal_rmse"], 0)
         self.assertLess(result["log_loss"], 1.2)
         self.assertLess(result["brier_score"], 0.75)
         self.assertTrue(result["calibration"])
         self.assertTrue(result["config"]["time_safe"])
+        dc_result = run_backtest(start_year=2018, min_prior_matches=1, score_model="dixon_coles")
+        self.assertEqual(dc_result["config"]["score_model"], "dixon_coles")
+        self.assertGreater(dc_result["ranked_probability_score"], 0)
+
+    def test_calibration_backtest_reports_optional_gate(self):
+        calibrated = temperature_draw_calibrate((0.55, 0.25, 0.20), temperature=1.2, draw_multiplier=1.05)
+        self.assertAlmostEqual(sum(calibrated), 1.0, delta=0.000001)
+        self.assertTrue(all(0 < item < 1 for item in calibrated))
+
+        result = run_calibration_backtest(start_year=2018, min_prior_matches=1, min_training_matches=20)
+        self.assertEqual(result["purpose"], "rivu_intel45_inspired_wdl_calibration_gate")
+        self.assertTrue(result["config"]["time_safe"])
+        self.assertFalse(result["config"]["default_changes_prediction"])
+        self.assertGreater(result["training_matches"], 0)
+        self.assertGreater(result["evaluation_matches"], 0)
+        self.assertIn("temperature_calibrated", result["evaluation"])
+        self.assertIn("expected_calibration_error", result["evaluation"]["uncalibrated"])
+        self.assertIn("default_enable_recommended", result["gate"])
+        self.assertIn("reason", result["gate"])
 
     def test_tournament_simulation_invariants(self):
         tournament = TournamentAgent(data=self.data, scoreline=self.scoreline, seed=2026)
@@ -335,6 +465,17 @@ class WorldCupPredictorTests(unittest.TestCase):
         b = TournamentAgent(data=self.data, scoreline=self.scoreline, seed=2026).simulate(runs=50)[0]
         self.assertEqual([row.team for row in a[:10]], [row.team for row in b[:10]])
         self.assertEqual([row.p_champion for row in a[:10]], [row.p_champion for row in b[:10]])
+
+    def test_report_includes_2026_format_randomness_summary(self):
+        outcomes, groups = TournamentAgent(data=self.data, scoreline=self.scoreline, seed=2026).simulate(runs=50)
+        sample = self.scoreline.predict("France", "Senegal")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = ReportAgent(tmp).write_report(sample, outcomes, groups, runs=50)
+            text = path.read_text(encoding="utf-8")
+        self.assertIn("## 2026 赛制随机性", text)
+        self.assertIn("冠军概率集中度", text)
+        self.assertIn("有效争冠球队数", text)
+        self.assertIn("32 强", text)
 
 
 if __name__ == "__main__":
