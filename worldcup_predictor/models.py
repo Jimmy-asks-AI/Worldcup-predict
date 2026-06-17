@@ -96,6 +96,7 @@ class MatchPrediction:
     lineup_adjustment: dict[str, Any] = field(default_factory=dict)
     context_adjustment: dict[str, Any] = field(default_factory=dict)
     event_prediction: dict[str, Any] = field(default_factory=dict)
+    explanation: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

@@ -44,6 +44,13 @@ class WorldCupPredictorTests(unittest.TestCase):
         self.assertAlmostEqual(total, 1.0, delta=0.001)
         probs = [item["probability"] for item in pred.top_scorelines]
         self.assertEqual(probs, sorted(probs, reverse=True))
+        self.assertIn("headline", pred.explanation)
+        self.assertIn("method", pred.explanation)
+        self.assertIn("team_strength", pred.explanation["factors"])
+        self.assertIn("lineup_and_availability", pred.explanation["factors"])
+        self.assertIn("match_context", pred.explanation["factors"])
+        self.assertIn("event_counts", pred.explanation["factors"])
+        self.assertIn("data_quality", pred.explanation["factors"])
 
     def test_missing_team_elo_uses_fallback_warning(self):
         pred = self.scoreline.predict("Atlantis", "France")
@@ -297,6 +304,12 @@ class WorldCupPredictorTests(unittest.TestCase):
         self.assertEqual(payload["referee_context"]["rows"], 1)
         self.assertNotEqual(payload["lambda_home_multiplier"], 1.0)
         self.assertNotEqual(payload["lambda_away_multiplier"], 1.0)
+        self.assertTrue(pred.explanation["factors"]["match_context"]["used"])
+        self.assertIn("player_performance", pred.explanation["factors"]["match_context"])
+        self.assertIn("travel_fatigue", pred.explanation["factors"]["match_context"])
+        self.assertIn("tactics", pred.explanation["factors"]["match_context"])
+        self.assertIn("weather", pred.explanation["factors"]["match_context"])
+        self.assertIn("referee", pred.explanation["factors"]["match_context"])
 
     def test_backtest_reports_core_metrics_and_calibration(self):
         result = run_backtest(start_year=2018, min_prior_matches=1)

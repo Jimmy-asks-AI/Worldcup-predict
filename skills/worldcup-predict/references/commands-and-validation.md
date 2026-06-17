@@ -46,7 +46,19 @@ python -m worldcup_predictor predict-match --home Spain --away "Cape Verde" --ma
 - `lineup_adjustment`
 - `context_adjustment`
 - `event_prediction`
+- `explanation`
 - `warnings`
+
+解释用户结果时，优先使用 `explanation`：
+
+- `explanation.headline` 写结论。
+- `explanation.lambda_path` 写基础进球期望如何变成最终进球期望。
+- `explanation.factors.team_strength` 写 Elo、FIFA、近期状态、世界杯历史。
+- `explanation.factors.lineup_and_availability` 写首发、伤停、替补和球员评分是否进入模型。
+- `explanation.factors.match_context` 写球员表现、旅行疲劳、战术、天气和裁判。
+- `explanation.factors.event_counts` 写黄牌、红牌、角球、任意球、点球数量。
+- `explanation.factors.data_quality` 写缺失数据和 fallback。
+- `explanation.caveats` 写概率边界和未使用真实赔率。
 
 ## 整届赛事模拟
 
@@ -103,6 +115,7 @@ python -m unittest discover -s tests -v
 - 胜平负概率和约等于 1。
 - Top scorelines 按概率降序。
 - 缺 Elo 时 fallback 1500 且 warning。
+- 单场预测必须包含 `explanation`，且至少包含 `team_strength`、`lineup_and_availability`、`match_context`、`event_counts`、`data_quality`。
 - 小组前二加 8 个最佳第三名共 32 队晋级。
 - 每次赛事模拟必须唯一冠军。
 

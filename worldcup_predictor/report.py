@@ -44,9 +44,16 @@ class ReportAgent:
         group_rows: list[dict],
         runs: int,
     ) -> Path:
+        def fmt(value) -> str:
+            try:
+                return f"{float(value):.2f}"
+            except (TypeError, ValueError):
+                return str(value)
+
         self.report_dir.mkdir(parents=True, exist_ok=True)
         top_champions = outcomes[:10]
         context = sample_prediction.context_adjustment or {}
+        explanation = sample_prediction.explanation or {}
         lines = [
             "# 世界杯多 Agent 预测报告",
             "",
@@ -58,12 +65,59 @@ class ReportAgent:
             f"- 最可能比分：{sample_prediction.top_scorelines[0]['scoreline']}，概率 {sample_prediction.top_scorelines[0]['probability']:.2%}",
             f"- 胜平负：{sample_prediction.home_team} 胜 {sample_prediction.p_home_win:.1%}，平 {sample_prediction.p_draw:.1%}，{sample_prediction.away_team} 胜 {sample_prediction.p_away_win:.1%}",
             f"- 预期总进球：{sample_prediction.expected_goals}",
-            "",
+        ]
+        if explanation:
+            factors = explanation.get("factors", {})
+            strength = factors.get("team_strength", {})
+            lineup = factors.get("lineup_and_availability", {})
+            match_context = factors.get("match_context", {})
+            data_quality = factors.get("data_quality", {})
+            lambda_path = explanation.get("lambda_path", {})
+            method = explanation.get("method", [])
+            lines.extend(
+                [
+                    "",
+                    "## 单场解释",
+                    "",
+                    f"- 结论：{explanation.get('headline', '')}",
+                    f"- 进球期望路径：{lambda_path.get('plain_text', '')}",
+                    f"- 球队强度：{strength.get('summary', '')}",
+                    f"- 阵容/伤停/替补：{lineup.get('summary', '')}",
+                    f"- 非赔率上下文：{match_context.get('summary', '')}",
+                    f"- 数据缺口：{data_quality.get('summary', '')}",
+                ]
+            )
+            if method:
+                lines.append("- 方法链路：" + "；".join(str(item).rstrip("。") for item in method) + "。")
+            home_strength = strength.get("home", {})
+            away_strength = strength.get("away", {})
+            if home_strength and away_strength:
+                lines.extend(
+                    [
+                        "",
+                        "| 因素 | 主队 | 客队 |",
+                        "|---|---:|---:|",
+                        f"| Elo | {fmt(home_strength.get('elo'))} | {fmt(away_strength.get('elo'))} |",
+                        f"| FIFA 排名 | {home_strength.get('fifa_rank')} | {away_strength.get('fifa_rank')} |",
+                        f"| FIFA 积分 | {fmt(home_strength.get('fifa_points'))} | {fmt(away_strength.get('fifa_points'))} |",
+                        f"| 近期场均进球 | {fmt(home_strength.get('recent_goals_for'))} | {fmt(away_strength.get('recent_goals_for'))} |",
+                        f"| 近期场均失球 | {fmt(home_strength.get('recent_goals_against'))} | {fmt(away_strength.get('recent_goals_against'))} |",
+                        f"| 近期场均积分 | {fmt(home_strength.get('recent_points_per_match'))} | {fmt(away_strength.get('recent_points_per_match'))} |",
+                        f"| 世界杯历史场均进球 | {fmt(home_strength.get('worldcup_goals_for'))} | {fmt(away_strength.get('worldcup_goals_for'))} |",
+                        f"| 世界杯历史场均失球 | {fmt(home_strength.get('worldcup_goals_against'))} | {fmt(away_strength.get('worldcup_goals_against'))} |",
+                    ]
+                )
+            lines.append("")
+        else:
+            lines.append("")
+        lines.extend(
+            [
             "## 冠军概率 Top 10",
             "",
             "| 排名 | 球队 | 冠军概率 | 进决赛概率 | 进四强概率 |",
             "|---:|---|---:|---:|---:|",
-        ]
+            ]
+        )
         for idx, team in enumerate(top_champions, 1):
             lines.append(
                 f"| {idx} | {team.team} | {team.p_champion:.1%} | {team.p_final:.1%} | {team.p_semi_final:.1%} |"
